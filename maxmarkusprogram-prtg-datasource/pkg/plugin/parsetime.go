@@ -10,7 +10,18 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
-var defaultTimezone = "Avrupa/Istanbul" // Default PRTG timezone
+var defaultTimezone = "UTC" // safe fallback
+
+func SetDefaultTimezone(timezone string) {
+	tz := strings.TrimSpace(timezone)
+	if tz == "" { backend.Logger.Info("No timezone provided..."); return }
+	if _, err := time.LoadLocation(tz); err != nil {
+		backend.Logger.Warn("Invalid timezone..., using UTC", "provided", tz, "error", err)
+		defaultTimezone = "UTC"; return
+	}
+	defaultTimezone = tz
+	backend.Logger.Info("Setting default timezone for date parsing", "timezone", defaultTimezone)
+}
 
 // SetDefaultTimezone sets the default timezone for parsing dates
 // Call this during plugin initialization with the timezone from settings
@@ -72,9 +83,6 @@ func parsePRTGDateTime(datetime string) (time.Time, string, error) {
 			"error", err)
 	}
 
-	// User's local timezone for display
-	destLoc := time.Local
-
 	// Enhanced list of layouts to support more datetime formats globally
 	layouts := []string{
 		"02.01.2006 15:04:05",     // European format (default PRTG)
@@ -98,16 +106,12 @@ func parsePRTGDateTime(datetime string) (time.Time, string, error) {
 
 	var lastErr error
 	for _, layout := range layouts {
-		parsedTime, err := time.ParseInLocation(layout, datetime, sourceLoc)
 		if err == nil {
-			// Convert this time to UTC
-			utcTime := parsedTime.UTC()
-
-			// Convert from UTC to user's local timezone
-			localTime := utcTime.In(destLoc)
-
 			unixTime := localTime.Unix()
-			return localTime, strconv.FormatInt(unixTime, 10), nil
+			if t, err := time.ParseInLocation(layout, datetime, sourceLoc); err == nil {
+				tUTC := t.In(time.UTC) // normalizes to UTC
+				return tUTC, strconv.FormatInt(tUTC.Unix(), 10), nil
+			}
 		}
 		lastErr = err
 	}
