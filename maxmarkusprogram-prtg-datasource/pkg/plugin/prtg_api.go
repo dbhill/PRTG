@@ -306,7 +306,7 @@ func (a *Api) GetHistoricalData(sensorID string, startDate, endDate time.Time) (
 		"startDate", sdate,
 		"endDate", edate,
 		"avg", avg,
-		"timezone", getDefaultTimezone(),
+		"timezone", defaultTimezone,
 	)
 
 	// Use cacheTime for response caching
