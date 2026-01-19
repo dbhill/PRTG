@@ -229,7 +229,7 @@ func (d *Datasource) handleMetricsQuery(ctx context.Context, qm queryModel, time
 	}
 
 	// Fetch historical data once for all channels
-	historicalData, err := d.api.GetHistoricalData(qm.SensorId, timeRange.From.UTC(), timeRange.To.UTC())
+	historicalData, err := d.api.GetHistoricalData(qm.SensorId, timeRange.From, timeRange.To)
 	if err != nil {
 		d.logger.Error("Failed to fetch historical data",
 			"error", err,
@@ -595,7 +595,7 @@ func (d *Datasource) handlePropertyQuery(ctx context.Context, qm queryModel, pro
 				}
 
 				if value != nil {
-					timesRT = append(timesRT, timestamp)
+					timesRT = append(timesRT, timestamp.UTC())
 					valuesRT = append(valuesRT, value)
 				}
 			}
@@ -652,7 +652,7 @@ func (d *Datasource) handlePropertyQuery(ctx context.Context, qm queryModel, pro
 				}
 
 				if value != nil {
-					timesRT = []time.Time{timestamp}
+					timesRT = []time.Time{timestamp.UTC()}
 					valuesRT = []interface{}{value}
 					break
 				}
