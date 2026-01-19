@@ -98,7 +98,6 @@ func parsePRTGDateTime(datetime string) (time.Time, string, error) {
 	var lastErr error
 	for _, layout := range layouts {
 		if err == nil {
-			unixTime := localTime.Unix()
 			if t, err := time.ParseInLocation(layout, datetime, sourceLoc); err == nil {
 				tUTC := t.In(time.UTC) // normalizes to UTC
 				return tUTC, strconv.FormatInt(tUTC.Unix(), 10), nil
