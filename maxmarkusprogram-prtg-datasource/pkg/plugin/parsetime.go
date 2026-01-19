@@ -23,6 +23,11 @@ func SetDefaultTimezone(timezone string) {
 	backend.Logger.Info("Setting default timezone for date parsing", "timezone", defaultTimezone)
 }
 
+func getDefaultTimezone() string {
+	tz := defaultTimezone
+	return tz
+}
+
 // ParseTimeInit provides settings to the parse_time functions
 // Currently not used but kept for future functionality
 func ParseTimeInit(s *models.PluginSettings) {
