@@ -236,14 +236,17 @@ func (a *Api) GetHistoricalData(sensorID string, startDate, endDate time.Time) (
 	}
 
 	// Convert to PRTG's timezone (Europe/Berlin)
-	loc, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
 		loc = time.Local
 	}
-
-	// Add a small buffer to ensure we don't miss data at day boundaries
-	localStartDate := startDate.In(loc).Add(-1 * time.Hour)
-	localEndDate := endDate.In(loc).Add(1 * time.Hour)
+	
+	// new: uses TZ configured in settings; fallback UTC
+	loc, err := time.LoadLocation(defaultTimezone)
+	if err != nil { loc = time.UTC }
+	
+	// small buffer only for edges
+	localStartDate := startDate.In(loc).Add(-5 * time.Minute)
+	localEndDate := endDate.In(loc).Add( 5 * time.Minute)
 
 	// Format dates for PRTG API
 	const format = "2006-01-02-15-04-05"
@@ -302,6 +305,7 @@ func (a *Api) GetHistoricalData(sensorID string, startDate, endDate time.Time) (
 		"startDate", sdate,
 		"endDate", edate,
 		"avg", avg,
+		"timezone", defaultTimezone
 	)
 
 	// Use cacheTime for response caching
