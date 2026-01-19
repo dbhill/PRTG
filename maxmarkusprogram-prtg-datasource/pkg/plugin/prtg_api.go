@@ -235,14 +235,15 @@ func (a *Api) GetHistoricalData(sensorID string, startDate, endDate time.Time) (
 		return nil, fmt.Errorf("invalid query: missing sensor ID")
 	}
 
-	// Convert to PRTG's timezone (Europe/Berlin)
+	// Use TZ configured in settings; fallback UTC
+	loc, err := time.LoadLocation(getDefaultTimezone())
 	if err != nil {
-		loc = time.Local
+		log.DefaultLogger.Warn("Invalid timezone; falling back to UTC",
+			"timezone", getDefaultTimezone(),
+			"err", err,
+		)
+		loc = time.UTC
 	}
-	
-	// new: uses TZ configured in settings; fallback UTC
-	loc, err := time.LoadLocation(defaultTimezone)
-	if err != nil { loc = time.UTC }
 	
 	// small buffer only for edges
 	localStartDate := startDate.In(loc).Add(-5 * time.Minute)
@@ -305,7 +306,7 @@ func (a *Api) GetHistoricalData(sensorID string, startDate, endDate time.Time) (
 		"startDate", sdate,
 		"endDate", edate,
 		"avg", avg,
-		"timezone", defaultTimezone,
+		"timezone", getDefaultTimezone(),
 	)
 
 	// Use cacheTime for response caching
